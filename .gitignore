@@ -133,7 +133,7 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
-
+# 忽略env
 # Environments
 .env
 .envrc
