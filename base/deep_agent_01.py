@@ -29,7 +29,7 @@ tavily_client = TavilyClient(api_key=tavily_key)
 def internet_search(
         query:str,  # 搜索关键字和内容
         max_results:int = 5,  # 最大结果数量
-        topic: Literal["news", "finance", "general"] = "general",
+        topic: Literal["news", "finance", "general"] = "general", # 新闻类型
         include_raw_content:bool = False,  # 是否精简搜索 False 精简搜索 true 搜索原文详细结果
 ):
     """
