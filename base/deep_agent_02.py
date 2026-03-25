@@ -88,8 +88,6 @@ stream = deep_agent.stream({"messages": [{"role": "user", "content": "查询人�
 {
     "model / tools " : { messages : [ .... ,
     "model / tools " : { messages : [ .... ,
-    "model / tools " : { messages : [ .... ,
-    "model / tools " : { messages : [ .... ,
     "model / tools " : { messages : [ .... 
 }
 """
