@@ -1,0 +1,49 @@
+
+
+1. DeepAgent智能体创建
+   deep_agent = create_deep_agent(
+       model = 配置模型,
+       system_prompt = 系统提示词，
+       tools = [],
+       subagents = [],
+       checkpointer = 检查点 短期记忆 MemorySaver(),
+       interrupt_on = {} , 人机交互
+       backend = 长期记忆  State  Store FileSystem Composite ...,
+       store = 存储长期记忆的工具,
+       middleware = [自定义,现有的中间件] , 中间件
+       skills = ["skill在fileBackend下的文件夹地址"] 外置技能
+   )
+2. 执行和结果处理
+    同步：   invoke   |  stream
+    异步:   ainvoke  |  astream  -> async
+    处理结果： invoke => result['messages'][-1].content
+             stream => key -> tools(调用了工具) | model（调用工具和子智能体或者直接返回结果） :  {messages: []}
+3. 兼容Langgraph和LangChain
+    如何创建子智能体： 字典 | CompiledSubAgent
+    字典： deepagent - 》 subAgent -> {model,description,system_prompt,tools,checkpointer,interrupt_on,middleware，skills}
+    对象： CompiledSubAgent -> langchain langgraph  CompiledSubAgent(name,description,runnable = langchain langgraph)4
+         注意：langgraph  compile()  state -> messages 属性
+
+4. 人机交互实现HITL
+    最佳实践：
+       1. 必须配置短期记忆 checkpointer = MemorySaver()  必须配置线程id  invoke( , config = thread_id)
+       2. interrupt_on = {key=工具名 : value True 交互 | False 直接放行 } , 人机交互
+       3. 预先执行一次 result = invoke() 触发了人机交互，本次不会真的执行
+       4. 获取拦截和交互状态  result['__interrupt__'][0].value => {action_requests :[{name , args },{}] |  review_config}
+          [
+            type: reject,
+            type: approve,
+            {type: edit, edited_action:{name: 工具名,args:{参数名:新的参数}}}
+          ]
+       5. 再次执行，真的执行 result = invoke(Command(resume = {"decisions": []}),config = 上一次的线程id)
+5. 记忆（长短期）
+    短期： 一次执行的过程 checkpointer = MemorySaver() 人机交互
+    长期： 执行的最终结果 store backend 跨会话进行数据共享
+6. 中间件
+    自定义中间件： @wrap_tool_call  函数(request,handler)  前置增强    handler(request )  后置增强  return xx
+    现成的中间件： SummarizationMiddleware(  ModelCallLimitMiddleware(  ToolCallLimitMiddleware(  behvaior = end | error
+    middleware = [自定义,现有的中间件] , 中间件
+7. skill和配置
+    理解啥事skill -》 技能 -> 提示词复用 -》 文件夹（name） /  SKILL.md  元数据 yaml  |  提示词 md
+    deepagent -> skill  1. fileSystemBackEnd  2. skills = ["file的下的文件夹的 skills "]
+    skill加载原理 -》 渐进式 -》 元数据 -》 加载提示词 -》 实现功能
